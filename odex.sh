@@ -130,6 +130,7 @@ case $choose_odex in
       exit
       ;;
    esac
+   clear
    ;;
 3)
    odex_module=false
@@ -173,6 +174,7 @@ case $choose_odex in
       exit
       ;;
    esac
+   clear
    ;;
 *)
    echo "输入错误，请重新输入"
