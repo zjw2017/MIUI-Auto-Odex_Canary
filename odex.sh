@@ -545,23 +545,22 @@ if [ $choose_odex != 3 ]; then
    else
       echo "- 未选择编译ODEX选项，不会生成模块"
    fi
-fi
-if [ $choose_odex == 3 ]; then
+else
    echo "- 不进行ODEX编译"
-   if [ $dex2oat != null ]; then
-      echo "正在以$dex2oat模式优化用户软件"
-      for item in $(pm list packages -3); do
-         app=${item:8}
-         echo "正在优化 -> $app"
-         cmd package compile -m $dex2oat $app
-         echo "应用优化完成"
-         let appnumber=appnumber+1
-         percentage=$((appnumber * 100 / apptotalnumber))
-         echo "已完成 $percentage%   $appnumber / $apptotalnumber"
-      done
-   else
-      echo "- 不进行Dex2oat编译"
-   fi
+fi
+if [ $dex2oat != null ]; then
+   echo "正在以$dex2oat模式优化用户软件"
+   for item in $(pm list packages -3); do
+      app=${item:8}
+      echo "正在优化 -> $app"
+      cmd package compile -m $dex2oat $app
+      echo "应用优化完成"
+      let appnumber=appnumber+1
+      percentage=$((appnumber * 100 / apptotalnumber))
+      echo "已完成 $percentage%   $appnumber / $apptotalnumber"
+   done
+else
+   echo "- 不进行Dex2oat编译"
 fi
 rm -rf $workfile
 echo "- 完成！"
