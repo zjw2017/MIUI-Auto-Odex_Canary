@@ -77,7 +77,7 @@ echo "*************************************************"
 echo " "
 echo " "
 echo "                   MIUI ODEX"
-echo "                   $version"
+echo "                      $version"
 echo " "
 echo " "
 echo "*************************************************"
@@ -96,7 +96,7 @@ case $choose_odex in
    echo " "
    echo " "
    echo "                   MIUI ODEX"
-   echo "                   $version"
+   echo "                      $version"
    echo " "
    echo "*************************************************"
    echo -e "\n- 您希望以什么模式进行Dex2oat\n"
@@ -139,7 +139,7 @@ case $choose_odex in
    echo " "
    echo " "
    echo "                   MIUI ODEX"
-   echo "                   $version"
+   echo "                      $version"
    echo " "
    echo "*************************************************"
    echo -e "\n- 您希望以什么模式进行Dex2oat\n"
@@ -543,7 +543,8 @@ if [ $choose_odex != 3 ]; then
    else
       echo "- 未选择编译ODEX选项，不会生成模块"
    fi
-elif [ $choose_odex == 3 ]; then
+fi
+if [ $choose_odex == 3 ]; then
    echo "- 不进行ODEX编译"
    if [ $dex2oat != null ]; then
       echo "正在以$dex2oat模式优化用户软件"
