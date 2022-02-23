@@ -2,5 +2,5 @@
   "version": 8.5,
   "versionCode": 85,
   "zipUrl": "https://github.com/zjw2017/MIUI-Auto-Odex_Canary/releases/download/8.5/odex_script_update_online.zip",
-  "changelog": "https://raw.fastgit.org/zjw2017/MIUI-Auto-Odex_Canary/master/odex.md"
+  "changelog": "https://github.com/zjw2017/MIUI-Auto-Odex_Canary/blob/master/odex.md"
 }
