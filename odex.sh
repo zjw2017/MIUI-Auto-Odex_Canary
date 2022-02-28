@@ -553,7 +553,7 @@ if [ $dex2oat != null ]; then
             echo "- 解包$o成功，开始处理"
             if [ -f "classes.dex" ]; then
                echo "! 已检测到dex文件，开始编译"
-               rm -rf $p/oat
+               rm -rf $p/oat/arm
                mkdir -p $p/oat/arm
                oat=$p/oat/arm
                dex2oat --dex-file=$p/base.apk --compiler-filter=$dex2oat --instruction-set=arm --oat-file=$oat/base.odex
@@ -576,7 +576,7 @@ if [ $dex2oat != null ]; then
             echo "- 解包$q成功，开始处理"
             if [ -f "classes.dex" ]; then
                echo "! 已检测到dex文件，开始编译"
-               rm -rf $r/oat
+               rm -rf $r/oat/arm64
                mkdir -p $r/oat/arm64
                oat=$r/oat/arm64
                dex2oat --dex-file=$r/base.apk --compiler-filter=$dex2oat --instruction-set=arm64 --oat-file=$oat/base.odex
