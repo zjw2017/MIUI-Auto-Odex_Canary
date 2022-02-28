@@ -1,5 +1,5 @@
 id=odex_script_update_online
 name=MIUI ODEX 脚本更新模块
-author=柚稚的孩纸&雄式老方
+author=柚稚的孩纸&冷洛
 minMagisk=24000
 updateJson=https://github.com/zjw2017/MIUI-Auto-Odex_Canary/blob/master/odex.json

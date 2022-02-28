@@ -1,4 +1,4 @@
-name: PackZip
+name: release
 on:
   push:
     paths:
