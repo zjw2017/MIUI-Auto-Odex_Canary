@@ -57,7 +57,7 @@ jobs:
           git config --global user.email "30484319+zjw2017@users.noreply.github.com"
           git config --global user.name "柚稚的孩纸"
           sed -i '4d' $GITHUB_WORKSPACE/odex.json
-          sed -i '3a "zipUrl": "https://github.com/zjw2017/MIUI-Auto-Odex_Canary/blob/master/odex.md/'"$browser_download_url"'",' $GITHUB_WORKSPACE/odex.json
+          sed -i '3a "zipUrl": "https://github.yzdhz.workers.dev/'"$browser_download_url"'",' $GITHUB_WORKSPACE/odex.json
           jq . $GITHUB_WORKSPACE/odex.json > $GITHUB_WORKSPACE/new.json
           rm -rf $GITHUB_WORKSPACE/odex.json && mv $GITHUB_WORKSPACE/new.json $GITHUB_WORKSPACE/odex.json
           git add ./odex.json
