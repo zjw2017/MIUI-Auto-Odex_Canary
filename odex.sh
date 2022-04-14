@@ -55,11 +55,11 @@ elif [[ $MIUI_version_code == 10 ]] && [[ $MIUI_version_name == V12 ]]; then
 elif [[ $MIUI_version_code == 9 ]] && [[ $MIUI_version_name == V11 ]]; then
    MIUI_version=11
 fi
-mkdir -p /storage/emulated/0/MIUI_odex/log
+mkdir -p $logfile
 mkdir -p $workfile/app
 mkdir -p $workfile/priv-app
 mkdir -p $workfile/framework
-touch /storage/emulated/0/MIUI_odex/log/MIUI_odex_"$now_time".log
+touch $logfile/MIUI_odex_"$now_time".log
 clear
 echo "*************************************************"
 echo " "
@@ -251,7 +251,7 @@ if [[ $choose_odex != 3 ]]; then
    echo "- 开始处理/system/app"
    for b in $(ls -l $workfile/app | awk '/^d/ {print $NF}'); do
       cd $workfile/app/"$b" || exit
-      rm -rf $(find . ! -name '*.apk')
+      rm -rf $(find . ! -name '"$b".apk')
       if unzip -q -o "$b".apk "classes.dex"; then
          echo "- 解包$b成功，开始处理"
          if [ -f "classes.dex" ]; then
@@ -259,7 +259,7 @@ if [[ $choose_odex != 3 ]]; then
             mkdir -p $workfile/app/"$b"/oat/arm64
             oat=$workfile/app/$b/oat/arm64
             dex2oat --dex-file=$workfile/app/"$b"/"$b".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$b".odex
-            rm -rf $(find . -maxdepth 1 ! -name 'oat')
+            find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
             echo "- 已完成对$b的odex分离处理"
             ((success_count++))
          else
@@ -286,7 +286,7 @@ if [[ $choose_odex != 3 ]]; then
             mkdir -p $workfile/priv-app/"$c"/oat/arm64
             oat=$workfile/priv-app/$c/oat/arm64
             dex2oat --dex-file=$workfile/priv-app/"$c"/"$c".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$c".odex
-            rm -rf $(find . -maxdepth 1 ! -name 'oat')
+            find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
             echo "- 已完成对$c的odex分离处理"
             ((success_count++))
          else
@@ -328,7 +328,7 @@ if [[ $choose_odex != 3 ]]; then
                mkdir -p $workfile/product/app/"$e"/oat/arm64
                oat=$workfile/product/app/$e/oat/arm64
                dex2oat --dex-file=$workfile/product/app/"$e"/"$e".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$e".odex
-               rm -rf $(find . -maxdepth 1 ! -name 'oat')
+               find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
                echo "- 已完成对$e的odex分离处理"
                ((success_count++))
             else
@@ -355,7 +355,7 @@ if [[ $choose_odex != 3 ]]; then
                mkdir -p $workfile/product/priv-app/"$f"/oat/arm64
                oat=$workfile/product/priv-app/$f/oat/arm64
                dex2oat --dex-file=$workfile/product/priv-app/"$f"/"$f".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$f".odex
-               rm -rf $(find . -maxdepth 1 ! -name 'oat')
+               find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
                echo "- 已完成对$f的odex分离处理"
                ((success_count++))
             else
@@ -398,7 +398,7 @@ if [[ $choose_odex != 3 ]]; then
                mkdir -p $workfile/system_ext/app/"$h"/oat/arm64
                oat=$workfile/system_ext/app/$h/oat/arm64
                dex2oat --dex-file=$workfile/system_ext/app/"$h"/"$h".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$h".odex
-               rm -rf $(find . -maxdepth 1 ! -name 'oat')
+               find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
                echo "- 已完成对$h的odex分离处理"
                ((success_count++))
             else
@@ -425,7 +425,7 @@ if [[ $choose_odex != 3 ]]; then
                mkdir -p $workfile/system_ext/priv-app/"$i"/oat/arm64
                oat=$workfile/system_ext/priv-app/$i/oat/arm64
                dex2oat --dex-file=$workfile/system_ext/priv-app/"$i"/"$i".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$i".odex
-               rm -rf $(find . -maxdepth 1 ! -name 'oat')
+               find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
                echo "- 已完成对$i的odex分离处理"
                ((success_count++))
             else
@@ -455,7 +455,7 @@ if [[ $choose_odex != 3 ]]; then
                mkdir -p $workfile/vendor/app/"$j"/oat/arm64
                oat=$workfile/vendor/app/$j/oat/arm64
                dex2oat --dex-file=$workfile/vendor/app/"$j"/"$j".apk --compiler-filter=everything --instruction-set=arm64 --oat-file="$oat"/"$j".odex
-               rm -rf $(find . -maxdepth 1 ! -name 'oat')
+               find . -maxdepth 1 ! -name 'oat' -exec rm {} \;
                echo "- 已完成对$j的odex分离处理"
                ((success_count++))
             else
