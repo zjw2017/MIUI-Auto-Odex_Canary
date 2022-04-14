@@ -1,6 +1,7 @@
 #!/bin/bash
 # MIUI ODEX项目贡献者：柚稚的孩纸(zjw2017) & 冷洛(DavidPisces)
 workfile=/storage/emulated/0/MIUI_odex/system
+rm -rf $workfile
 failed_count=0
 logfile=/storage/emulated/0/MIUI_odex/log
 MIUI_version_code=$(getprop ro.miui.ui.version.code)
@@ -12,15 +13,6 @@ success_count=0
 time=$(date "+%Y年%m月%d日%H:%M:%S")
 version=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "version" | sed 's/:/\n/g' | sed '1d;3d;4d' | sed 's/^[ ]*//g')
 versionCode=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "versionCode" | sed 's/:/\n/g' | sed '1d' | sed 's/^[ ]*//g')
-rm -rf $workfile
-[ -d "/system/product/app" ] && mkdir -p $workfile/product/app && is_product=0
-[ -d "/system/product/priv-app" ] && mkdir -p $workfile/product/priv-app
-[ -d "/system/product/framework" ] && mkdir -p $workfile/product/framework && cp -r /system/product/framework/*.jar $workfile/product/framework
-[ -d "/system/system_ext/app" ] && mkdir -p $workfile/system_ext/app && is_system_ext=0
-[ -d "/system/system_ext/priv-app" ] && mkdir -p $workfile/system_ext/priv-app
-[ -d "/system/system_ext/framework" ] && mkdir -p $workfile/system_ext/framework && cp -r /system/system_ext/framework/*.jar $workfile/system_ext/framework
-[ -d "/system/vendor/app" ] && mkdir -p $workfile/vendor/app && is_vendor=0
-cp -r /system/framework/*.jar $workfile/framework
 if [[ $SDK == 28 ]]; then
    android_version=9
 elif [[ $SDK == 29 ]]; then
@@ -45,6 +37,14 @@ mkdir -p $logfile
 mkdir -p $workfile/app
 mkdir -p $workfile/priv-app
 mkdir -p $workfile/framework
+[ -d "/system/product/app" ] && mkdir -p $workfile/product/app && is_product=0
+[ -d "/system/product/priv-app" ] && mkdir -p $workfile/product/priv-app
+[ -d "/system/product/framework" ] && mkdir -p $workfile/product/framework && cp -r /system/product/framework/*.jar $workfile/product/framework
+[ -d "/system/system_ext/app" ] && mkdir -p $workfile/system_ext/app && is_system_ext=0
+[ -d "/system/system_ext/priv-app" ] && mkdir -p $workfile/system_ext/priv-app
+[ -d "/system/system_ext/framework" ] && mkdir -p $workfile/system_ext/framework && cp -r /system/system_ext/framework/*.jar $workfile/system_ext/framework
+[ -d "/system/vendor/app" ] && mkdir -p $workfile/vendor/app && is_vendor=0
+cp -r /system/framework/*.jar $workfile/framework
 touch $logfile/MIUI_odex_"$now_time".log
 clear
 echo "*************************************************"
