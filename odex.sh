@@ -13,28 +13,14 @@ time=$(date "+%Y年%m月%d日%H:%M:%S")
 version=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "version" | sed 's/:/\n/g' | sed '1d;3d;4d' | sed 's/^[ ]*//g')
 versionCode=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "versionCode" | sed 's/:/\n/g' | sed '1d' | sed 's/^[ ]*//g')
 rm -rf $workfile
-if [ -d "/system/product" ]; then
-   is_product=0
-else
-   is_product=1
-fi
-if [ -d "/system/system_ext" ]; then
-   is_system_ext=0
-else
-   is_system_ext=1
-fi
-if [ -d "/system/vendor/app" ]; then
-   mkdir -p $workfile/vendor/app
-   is_vendor=0
-else
-   is_vendor=1
-fi
-[ -d "/system/product/app" ] && mkdir -p $workfile/product/app
+[ -d "/system/product/app" ] && mkdir -p $workfile/product/app && is_product=0
 [ -d "/system/product/priv-app" ] && mkdir -p $workfile/product/priv-app
-[ -d "/system/product/framework" ] && mkdir -p $workfile/product/framework
-[ -d "/system/system_ext/app" ] && mkdir -p $workfile/system_ext/app
+[ -d "/system/product/framework" ] && mkdir -p $workfile/product/framework && cp -r /system/product/framework/*.jar $workfile/product/framework
+[ -d "/system/system_ext/app" ] && mkdir -p $workfile/system_ext/app && is_system_ext=0
 [ -d "/system/system_ext/priv-app" ] && mkdir -p $workfile/system_ext/priv-app
-[ -d "/system/system_ext/framework" ] && mkdir -p $workfile/system_ext/framework
+[ -d "/system/system_ext/framework" ] && mkdir -p $workfile/system_ext/framework && cp -r /system/system_ext/framework/*.jar $workfile/system_ext/framework
+[ -d "/system/vendor/app" ] && mkdir -p $workfile/vendor/app && is_vendor=0
+cp -r /system/framework/*.jar $workfile/framework
 if [[ $SDK == 28 ]]; then
    android_version=9
 elif [[ $SDK == 29 ]]; then
@@ -158,7 +144,6 @@ if [[ $choose_odex != 3 ]]; then
       cp -r /system/priv-app/MiuiCamera $workfile/priv-app
       cp -r /system/priv-app/MiuiGallery $workfile/priv-app
       cp -r /system/priv-app/MiuiHome $workfile/priv-app
-      cp -r /system/framework/*.jar $workfile/framework
       if [[ $SDK -le 28 ]]; then
          cp -r /system/priv-app/Settings $workfile/priv-app
          cp -r /system/priv-app/MiuiSystemUI $workfile/priv-app
@@ -166,15 +151,12 @@ if [[ $choose_odex != 3 ]]; then
       if [[ $SDK == 29 ]]; then
          cp -r /system/product/priv-app/Settings $workfile/product/priv-app
          cp -r /system/priv-app/MiuiSystemUI $workfile/priv-app
-         cp -r /system/product/framework/*.jar $workfile/product/framework
          rm -rf $workfile/product/app
          rm -rf $workfile/system_ext
       fi
       if [[ $SDK == 30 ]] || [[ $SDK == 31 ]]; then
          cp -r /system/system_ext/priv-app/MiuiSystemUI $workfile/system_ext/priv-app
          cp -r /system/system_ext/priv-app/Settings $workfile/system_ext/priv-app
-         cp -r /system/system_ext/framework/*.jar $workfile/system_ext/framework
-         cp -r /system/product/framework/*.jar $workfile/product/framework
          rm -rf $workfile/product/app
          rm -rf $workfile/product/priv-app
          rm -rf $workfile/system_ext/app
@@ -217,20 +199,9 @@ if [[ $choose_odex != 3 ]]; then
       echo "- 正在以Complete(完整)模式编译"
       cp -r /system/app/* $workfile/app
       cp -r /system/priv-app/* $workfile/priv-app
-      cp -r /system/framework/*.jar $workfile/framework
-      if [ $is_product == 0 ]; then
-         cp -r /system/product/app/* $workfile/product/app
-         cp -r /system/product/priv-app/* $workfile/product/priv-app
-         cp -r /system/product/framework/*.jar $workfile/product/framework
-      fi
-      if [ $is_system_ext == 0 ]; then
-         cp -r /system/system_ext/app/* $workfile/system_ext/app
-         cp -r /system/system_ext/priv-app/* $workfile/system_ext/priv-app
-         cp -r /system/system_ext/framework/*.jar $workfile/system_ext/framework
-      fi
-      if [ $is_vendor == 0 ]; then
-         cp -r /system/vendor/app/* $workfile/vendor/app
-      fi
+      [ $is_product == 0 ] && cp -r /system/product/app/* $workfile/product/app && cp -r /system/product/priv-app/* $workfile/product/priv-app
+      [ $is_system_ext == 0 ] && cp -r /system/system_ext/app/* $workfile/system_ext/app && cp -r /system/system_ext/priv-app/* $workfile/system_ext/priv-app
+      [ $is_vendor == 0 ] && cp -r /system/vendor/app/* $workfile/vendor/app
       echo "- 文件复制完成，开始执行"
    fi
    clear
