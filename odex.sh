@@ -1,15 +1,31 @@
 #!/bin/bash
 # MIUI ODEX项目贡献者：柚稚的孩纸(zjw2017) & 冷洛(DavidPisces)
+Simple_List="com.miui.core
+com.miui.system
+com.xiaomi.xmsf
+com.xiaomi.mirror
+com.xiaomi.misettings
+com.miui.mishare.connectivity
+com.android.camera
+com.miui.freeform
+com.miui.gallery
+com.miui.home
+com.android.systemui
+com.miui.securitycenter
+com.android.settings"
 workfile=/storage/emulated/0/MIUI_odex/system
-rm -rf $workfile
-failed_count=0
+workfile_userapp=/storage/emulated/0/MIUI_odex/user-app
 logfile=/storage/emulated/0/MIUI_odex/log
+rm -rf $workfile
+success_count=0
+failed_count=0
+appnumber_32=0
+appnumber_64=0
 MIUI_version_code=$(getprop ro.miui.ui.version.code)
 MIUI_version_name=$(getprop ro.miui.ui.version.name)
 modelversion="$(getprop ro.system.build.version.incremental)"
 now_time=$(date '+%Y%m%d_%H:%M:%S')
 SDK=$(getprop ro.system.build.version.sdk)
-success_count=0
 time=$(date "+%Y年%m月%d日%H:%M:%S")
 version=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "version" | sed 's/:/\n/g' | sed '1d;3d;4d' | sed 's/^[ ]*//g')
 versionCode=$(cat /storage/emulated/0/MIUI_odex/odex.json | sed 's/,/\n/g' | grep "versionCode" | sed 's/:/\n/g' | sed '1d' | sed 's/^[ ]*//g')
@@ -37,6 +53,7 @@ mkdir -p $logfile
 mkdir -p $workfile/app
 mkdir -p $workfile/priv-app
 mkdir -p $workfile/framework
+mkdir -p $workfile_userapp && echo "$(pm list package -f | grep -v verlay)" >"$workfile_userapp"/package.log
 [ -d "/system/product/app" ] && mkdir -p $workfile/product/app && is_product=0
 [ -d "/system/product/priv-app" ] && mkdir -p $workfile/product/priv-app
 [ -d "/system/product/framework" ] && mkdir -p $workfile/product/framework && cp -r /system/product/framework/*.jar $workfile/product/framework
@@ -138,62 +155,19 @@ esac
 if [[ $choose_odex != 3 ]]; then
    if [[ $choose_odex == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
-      cp -r /system/app/miui $workfile/app
-      cp -r /system/app/miuisystem $workfile/app
-      cp -r /system/app/XiaomiServiceFramework $workfile/app
-      cp -r /system/priv-app/MiuiCamera $workfile/priv-app
-      cp -r /system/priv-app/MiuiGallery $workfile/priv-app
-      cp -r /system/priv-app/MiuiHome $workfile/priv-app
-      if [[ $SDK -le 28 ]]; then
-         cp -r /system/priv-app/Settings $workfile/priv-app
-         cp -r /system/priv-app/MiuiSystemUI $workfile/priv-app
-      fi
-      if [[ $SDK == 29 ]]; then
-         cp -r /system/product/priv-app/Settings $workfile/product/priv-app
-         cp -r /system/priv-app/MiuiSystemUI $workfile/priv-app
-         rm -rf $workfile/product/app
-         rm -rf $workfile/system_ext
-      fi
-      if [[ $SDK == 30 ]] || [[ $SDK == 31 ]]; then
-         cp -r /system/system_ext/priv-app/MiuiSystemUI $workfile/system_ext/priv-app
-         cp -r /system/system_ext/priv-app/Settings $workfile/system_ext/priv-app
-         rm -rf $workfile/product/app
-         rm -rf $workfile/product/priv-app
-         rm -rf $workfile/system_ext/app
-      fi
-      if [[ $MIUI_version_name == V11 ]]; then
-         if [ -d "/system/priv-app/MiShare" ]; then
-            cp -r /system/priv-app/MiShare $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/SecurityCenter" ]; then
-            cp -r /system/priv-app/SecurityCenter $workfile/priv-app
-         fi
-      fi
-      if [[ $MIUI_version_name == V12 ]]; then
-         if [ -d "/system/priv-app/MiuiFreeformService" ]; then
-            cp -r /system/priv-app/MiuiFreeformService $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/MiShare" ]; then
-            cp -r /system/priv-app/MiShare $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/SecurityCenter" ]; then
-            cp -r /system/priv-app/SecurityCenter $workfile/priv-app
-         fi
-      fi
-      if [[ $MIUI_version_name == V125 ]] || [[ $MIUI_version_name == V130 ]]; then
-         if [ -d "/system/priv-app/Mirror" ]; then
-            cp -r /system/priv-app/Mirror $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/MiuiFreeformService" ]; then
-            cp -r /system/priv-app/MiuiFreeformService $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/MiShare" ]; then
-            cp -r /system/priv-app/MiShare $workfile/priv-app
-         fi
-         if [ -d "/system/priv-app/SecurityCenter" ]; then
-            cp -r /system/priv-app/SecurityCenter $workfile/priv-app
-         fi
-      fi
+      for line in $Simple_List; do
+         for apk_line in $(grep "$line" "$workfile_userapp"/package.log | grep -v verlay); do
+            for apk_path in ${apk_line#*:}; do
+               apk_real_path=${apk_path%=*}
+               if echo "$apk_real_path" | grep -q "/data"; then
+                  echo "${apk_real_path##*/}" >>"$workfile_userapp"/apk外文件夹路径.txt
+                  echo "$line" >>已安装app的包名.txt
+               else
+                  cp -f "$apk_real_path" /storage/emulated/0/MIUI_odex/"${apk_real_path%/*}"
+               fi
+            done
+         done
+      done
       echo "- 文件复制完成，开始执行"
    elif [[ $choose_odex == 2 ]]; then
       echo "- 正在以Complete(完整)模式编译"
@@ -468,32 +442,36 @@ if [[ $choose_odex != 3 ]]; then
 else
    echo "- 不进行ODEX编译"
 fi
-if [ $dex2oat != null ]; then
-   echo "- 正在以$dex2oat模式优化用户软件"
-   echo "- 百分比最终可能不为100％"
-   appnumber_32=0
-   appnumber_64=0
-   mkdir -p $workfile/user-app
-   find /data/app -name "*.apk" >$workfile/user-app/apk路径.txt
-   while IFS= read -r k; do
-      echo "${k%/*}" >>$workfile/user-app/apk外文件夹路径.txt
-   done <$workfile/user-app/apk路径.txt
-   echo "$(pm list package -f)" >$workfile/user-app/tmp1.log
-   while IFS= read -r l; do
-      cat $workfile/user-app/tmp1.log | grep "$l" >>$workfile/user-app/tmp2.log
-   done <$workfile/user-app/apk路径.txt
-   while IFS= read -r m; do
-      echo "${m##*=}" >>$workfile/user-app/已安装app的包名.txt
-   done <$workfile/user-app/tmp2.log
+if [ "$choose_odex" == 1 ] && [ "$dex2oat" != null ]; then
+   echo "- 正在以everything模式优化用户安装的软件"
    while IFS= read -r n; do
-      dumpsys package "$n" | grep "arm: " >/dev/null && echo "$n" >>$workfile/user-app/32位app.txt
-      dumpsys package "$n" | grep "arm64: " >/dev/null && echo "$n" >>$workfile/user-app/64位app.txt
-   done <$workfile/user-app/已安装app的包名.txt
-   rm -rf $workfile/user-app/*.log
-   apptotalnumber_32=$(sed -n '$=' $workfile/user-app/32位app.txt)
+      dumpsys package "$n" | grep "arm: " >/dev/null && echo "$n" >>$workfile_userapp/32位app.txt
+      dumpsys package "$n" | grep "arm64: " >/dev/null && echo "$n" >>$workfile_userapp/64位app.txt
+   done <$workfile_userapp/已安装app的包名.txt
+elif [ $dex2oat != null ]; then
+   echo "- 正在以$dex2oat模式优化用户安装的软件"
+   echo "- 百分比最终可能不为100％"
+   find /data/app -name "*.apk" >$workfile_userapp/apk路径.txt
+   while IFS= read -r k; do
+      echo "${k%/*}" >>$workfile_userapp/apk外文件夹路径.txt
+   done <$workfile_userapp/apk路径.txt
+   while IFS= read -r l; do
+      cat $workfile_userapp/package.log | grep "$l" >>$workfile_userapp/package2.log
+   done <$workfile_userapp/apk路径.txt
+   while IFS= read -r m; do
+      echo "${m##*=}" >>$workfile_userapp/已安装app的包名.txt
+   done <$workfile_userapp/package2.log
+   while IFS= read -r n; do
+      dumpsys package "$n" | grep "arm: " >/dev/null && echo "$n" >>$workfile_userapp/32位app.txt
+      dumpsys package "$n" | grep "arm64: " >/dev/null && echo "$n" >>$workfile_userapp/64位app.txt
+   done <$workfile_userapp/已安装app的包名.txt
+   rm -rf $workfile_userapp/*.log
+fi
+if [ "$choose_odex" == 1 ] || [ "$dex2oat" != null ]; then
+   apptotalnumber_32=$(sed -n '$=' $workfile_userapp/32位app.txt)
    echo "- 开始处理32位app"
-   for o in $(cat $workfile/user-app/32位app.txt); do
-      for p in $(cat $workfile/user-app/apk外文件夹路径.txt | grep "$o"); do
+   for o in $(cat $workfile_userapp/32位app.txt); do
+      for p in $(cat $workfile_userapp/apk外文件夹路径.txt | grep "$o"); do
          cd "$p" || exit
          if unzip -q -o *.apk "classes.dex"; then
             echo "- 解包$o成功，开始处理"
@@ -512,10 +490,10 @@ if [ $dex2oat != null ]; then
          fi
       done
    done
-   apptotalnumber_64=$(sed -n '$=' $workfile/user-app/64位app.txt)
+   apptotalnumber_64=$(sed -n '$=' $workfile_userapp/64位app.txt)
    echo "- 开始处理64位app"
-   for q in $(cat $workfile/user-app/64位app.txt); do
-      for r in $(cat $workfile/user-app/apk外文件夹路径.txt | grep "$q"); do
+   for q in $(cat $workfile_userapp/64位app.txt); do
+      for r in $(cat $workfile_userapp/apk外文件夹路径.txt | grep "$q"); do
          cd "$r" || exit
          if unzip -q -o *.apk "classes.dex"; then
             echo "- 解包$q成功，开始处理"
@@ -538,4 +516,5 @@ else
    echo "- 不进行Dex2oat编译"
 fi
 rm -rf $workfile
+rm -rf $workfile_userapp
 echo "- 完成！"
