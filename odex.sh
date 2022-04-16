@@ -161,9 +161,9 @@ if [[ $choose_odex != 3 ]]; then
                apk_real_path=${apk_path%=*}
                if echo "$apk_real_path" | grep -q "/data"; then
                   echo "${apk_real_path##*/}" >>"$workfile_userapp"/apk外文件夹路径.txt
-                  echo "$line" >>已安装app的包名.txt
+                  echo "$line" >>"$workfile_userapp"/已安装app的包名.txt
                else
-                  cp -f "$apk_real_path" /storage/emulated/0/MIUI_odex/"${apk_real_path%/*}"
+                  cp -r "$apk_real_path" /storage/emulated/0/MIUI_odex"${apk_real_path%/*}"
                fi
             done
          done
@@ -442,7 +442,7 @@ if [[ $choose_odex != 3 ]]; then
 else
    echo "- 不进行ODEX编译"
 fi
-if [ "$choose_odex" == 1 ] && [ "$dex2oat" != null ]; then
+if [ "$choose_odex" == 1 ] && [ "$dex2oat" == null ]; then
    echo "- 正在以everything模式优化用户安装的软件"
    while IFS= read -r n; do
       dumpsys package "$n" | grep "arm: " >/dev/null && echo "$n" >>$workfile_userapp/32位app.txt
