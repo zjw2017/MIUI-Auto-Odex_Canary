@@ -47,9 +47,14 @@
 
 #### 如何使用
 * 1、Magisk
+
   >安装模块：odex_script_update_online.zip
+  >
+
 * 2-1 MT管理器
+
   >进入/storage/emulated/0/MIUI_odex，根据需要编辑Simple_List.prop文件
+  >
   >执行odex.sh并勾选左侧Root
   >
   >![](http://image.coolapk.com/feed/2020/0623/15/665894_f922a721_8810_5677@1080x2160.jpeg.m.jpg)
@@ -57,6 +62,9 @@
 * 2-2 其他终端
 
   > su
+  >
   > cd /storage/emulated/0/MIUI_odex
+  >
   > sh odex.sh
+  >
   >![](http://image.coolapk.com/feed/2020/0623/15/665894_16498409_8810_5679@1080x2160.jpeg.m.jpg)
