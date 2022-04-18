@@ -140,7 +140,7 @@ esac
 if [[ $choose_odex != 3 ]]; then
    if [[ $choose_odex == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
-      for line in $(cat /storage/emulated/0/MIUI_odex/Simple_List.prop | grep -v "#" | grep -w "$o"); do
+      for line in $(cat /storage/emulated/0/MIUI_odex/Simple_List.prop | grep -v "#"); do
          for apk_line in $(grep "$line" "$workfile_userapp"/package.log | grep -v verlay); do
             for apk_path in ${apk_line#*:}; do
                apk_real_path=${apk_path%=*}
