@@ -31,12 +31,12 @@
 ###### 必要
 
 * 必须具有Root权限
+* 必须使用Magisk 24.0及以上Magisk版本
 * 需要使用MT管理器或者其他终端执行脚本，比如Ansole终端、Termux等
 
 ###### 建议 
 
 * 动态适配各个Android大版本(Android P以下不保证生效)和MIUI11-MIUI13
-* 必须使用Magisk 24.0及以上Magisk版本
 * 建议安装完整Busybox
 
 #### 执行错误
