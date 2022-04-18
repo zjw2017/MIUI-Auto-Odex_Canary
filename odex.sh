@@ -1,18 +1,5 @@
 #!/bin/bash
 # MIUI ODEX项目贡献者：柚稚的孩纸(zjw2017) & 冷洛(DavidPisces)
-Simple_List="com.miui.core
-com.miui.system
-com.xiaomi.xmsf
-com.xiaomi.mirror
-com.xiaomi.misettings
-com.miui.mishare.connectivity
-com.android.camera
-com.miui.freeform
-com.miui.gallery
-com.miui.home
-com.android.systemui
-com.miui.securitycenter
-com.android.settings"
 workfile=/storage/emulated/0/MIUI_odex/system
 workfile_userapp=/storage/emulated/0/MIUI_odex/user-app
 logfile=/storage/emulated/0/MIUI_odex/log
@@ -153,7 +140,7 @@ esac
 if [[ $choose_odex != 3 ]]; then
    if [[ $choose_odex == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
-      for line in $Simple_List; do
+      for line in $(cat /storage/emulated/0/MIUI_odex/Simple_List.prop | grep -v "#" | grep -w "$o"); do
          for apk_line in $(grep "$line" "$workfile_userapp"/package.log | grep -v verlay); do
             for apk_path in ${apk_line#*:}; do
                apk_real_path=${apk_path%=*}
