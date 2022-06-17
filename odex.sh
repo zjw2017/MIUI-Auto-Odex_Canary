@@ -15,7 +15,7 @@ now_time=$(date '+%Y%m%d_%H:%M:%S')
 SDK=$(getprop ro.system.build.version.sdk)
 time=$(date "+%Y年%m月%d日%H:%M:%S")
 version=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w "version" | cut -d '=' -f2)
-versionCode=$(cat /data/adb/modules/odex_script_update_online/module.prop | sed 's/,/\n/g' | grep -w "versionCode" | cut -d '=' -f2)
+versionCode=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w "versionCode" | cut -d '=' -f2)
 if [[ $SDK == 28 ]]; then
    android_version=9
 elif [[ $SDK == 29 ]]; then
