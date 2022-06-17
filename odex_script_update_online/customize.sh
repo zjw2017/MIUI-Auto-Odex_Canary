@@ -16,11 +16,10 @@ fi
 if [ ! -d /storage/emulated/0/MIUI_odex ]; then
   mkdir -p /storage/emulated/0/MIUI_odex
 else
-  rm -rf /storage/emulated/0/MIUI_odex/odex.sh
-  rm -rf /storage/emulated/0/MIUI_odex/odex.json
+  [ -f /storage/emulated/0/MIUI_odex/odex.sh ] && rm -rf /storage/emulated/0/MIUI_odex/odex.sh
+  [ -f /storage/emulated/0/MIUI_odex/odex.json ] && rm -rf /storage/emulated/0/MIUI_odex/odex.json
 fi
 cp -f "$MODPATH"/odex.sh /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/odex.sh
-cp -f "$MODPATH"/odex.json /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/odex.json
 [ ! -f /storage/emulated/0/MIUI_odex/Simple_List.prop ] && cp -f "$MODPATH"/Simple_List.prop /storage/emulated/0/MIUI_odex
 rm -rf "$MODPATH"/Simple_List.prop
 rm -rf "$MODPATH"/system.prop
