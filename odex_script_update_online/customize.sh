@@ -24,4 +24,3 @@ cp -f "$MODPATH"/odex.json /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/od
 [ ! -f /storage/emulated/0/MIUI_odex/Simple_List.prop ] && cp -f "$MODPATH"/Simple_List.prop /storage/emulated/0/MIUI_odex
 rm -rf "$MODPATH"/Simple_List.prop
 rm -rf "$MODPATH"/system.prop
-rm -rf "$MODPATH"/system

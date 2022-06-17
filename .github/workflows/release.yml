@@ -22,6 +22,7 @@ jobs:
           sed -i '1d;4d;5d;6d' $GITHUB_WORKSPACE/odex_script_update_online/odex.json
           echo "version=${{ env.GITHUB_version }}" >>$GITHUB_WORKSPACE/odex_script_update_online/module.prop
           echo "versionCode=${{ env.GITHUB_versionCode }}" >>$GITHUB_WORKSPACE/odex_script_update_online/module.prop
+          echo "description=${{ env.GITHUB_description }}" >>$GITHUB_WORKSPACE/odex_script_update_online/module.prop
           cd $GITHUB_WORKSPACE/odex_script_update_online
           zip -q -r odex_script_update_online.zip *
           mv $GITHUB_WORKSPACE/odex_script_update_online/odex_script_update_online.zip $GITHUB_WORKSPACE/odex_script_update_online.zip
