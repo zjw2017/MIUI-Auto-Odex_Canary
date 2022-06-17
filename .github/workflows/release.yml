@@ -16,7 +16,6 @@ jobs:
           echo "GITHUB_description=$(cat $GITHUB_WORKSPACE/odex.md | sed '1d')" >> $GITHUB_ENV
           cp -f $GITHUB_WORKSPACE/odex.sh $GITHUB_WORKSPACE/odex_script_update_online
           cp -f $GITHUB_WORKSPACE/odex.json $GITHUB_WORKSPACE/odex_script_update_online
-          cp -f $GITHUB_WORKSPACE/odex.md $GITHUB_WORKSPACE/odex_script_update_online
           cp -f $GITHUB_WORKSPACE/Simple_List.prop $GITHUB_WORKSPACE/odex_script_update_online
       - name: 2. 制作模块
         run: |

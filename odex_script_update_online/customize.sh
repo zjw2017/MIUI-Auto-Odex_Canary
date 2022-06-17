@@ -21,7 +21,7 @@ else
 fi
 cp -f "$MODPATH"/odex.sh /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/odex.sh
 cp -f "$MODPATH"/odex.json /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/odex.json
-echo -n "description=$(cat $MODPATH/odex.md | sed '1d')" >>/data/adb/modules_update/odex_script_update_online_zjw2017/module.prop && rm -rf "$MODPATH"/odex.md
+[ ! -f /storage/emulated/0/MIUI_odex/Simple_List.prop ] && cp -f "$MODPATH"/Simple_List.prop /storage/emulated/0/MIUI_odex
+rm -rf "$MODPATH"/Simple_List.prop
 rm -rf "$MODPATH"/system.prop
-[ ! -f /storage/emulated/0/MIUI_odex/Simple_List.prop ] && cp -f "$MODPATH"/Simple_List.prop /storage/emulated/0/MIUI_odex && rm -rf "$MODPATH"/Simple_List.prop
-ui_print "- Done"
+rm -rf "$MODPATH"/system
