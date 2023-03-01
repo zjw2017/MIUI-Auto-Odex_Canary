@@ -14,7 +14,6 @@ version=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w 
 versionCode=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w "versionCode" | cut -d '=' -f2)
 # MIUI ODEX自定义配置文件目录
 mkdir -p /storage/emulated/0/Android/MIUI_odex
-[ ! -f /storage/emulated/0/Android/MIUI_odex/Simple_List.prop ] && cp /data/adb/modules/odex_script_update_online/Simple_List.prop /storage/emulated/0/Android/MIUI_odex
 if [[ $SDK == 28 ]]; then
    android_version=9
 elif [[ $SDK == 29 ]]; then
