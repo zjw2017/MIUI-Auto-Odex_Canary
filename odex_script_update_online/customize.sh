@@ -23,14 +23,15 @@ if [ ! -d /storage/emulated/0/Android/MIUI_odex/module_files ]; then
   mkdir -p /storage/emulated/0/Android/MIUI_odex/module_files
 fi
 rm -rf /data/system/package_cache/*
-unzip "$ZIPFILE" 'customize.sh' -d "$MODPATH"
-unzip "$ZIPFILE" 'module.prop' -d "$MODPATH"
-unzip "$ZIPFILE" 'uninstall.sh' -d "$MODPATH"
-unzip "$ZIPFILE" 'system/*' -d "$MODPATH"
+unzip -o "$ZIPFILE" 'customize.sh' -d "$MODPATH"
+unzip -o "$ZIPFILE" 'module.prop' -d "$MODPATH"
+unzip -o "$ZIPFILE" 'uninstall.sh' -d "$MODPATH"
+unzip -o "$ZIPFILE" 'system/*' -d "$MODPATH"
 unzip -o "$ZIPFILE" 'odex.sh' -d "/storage/emulated/0/Android/MIUI_odex"
-unzip -o "$ZIPFILE" 'module.prop' -d "/storage/emulated/0/Android/MIUI_odex"
+unzip -o "$ZIPFILE" 'module.prop' -d "/storage/emulated/0/Android/MIUI_odex/module_files"
 unzip -o "$ZIPFILE" 'META-INF/*' -d "/storage/emulated/0/Android/MIUI_odex/module_files"
-[ ! -f /storage/emulated/0/Android/MIUI_odex/Simple_List.prop ] && unzip "$ZIPFILE" 'Simple_List.prop' -d "/storage/emulated/0/Android/MIUI_odex"
+unzip -o "$ZIPFILE" 'uninstall.sh' -d "/storage/emulated/0/Android/MIUI_odex/module_files"
+[ ! -f /storage/emulated/0/Android/MIUI_odex/Simple_List.prop ] && unzip -o "$ZIPFILE" 'Simple_List.prop' -d "/storage/emulated/0/Android/MIUI_odex"
 [ -f /storage/emulated/0/Android/MIUI_odex/odex.json ] && rm -rf /storage/emulated/0/Android/MIUI_odex/odex.json
 set_perm_recursive "$MODPATH"/system/bin 0 2000 0755 0755
 set_perm_recursive "$MODPATH" 0 0 0755 0644
