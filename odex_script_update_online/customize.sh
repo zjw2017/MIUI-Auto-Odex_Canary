@@ -33,6 +33,6 @@ unzip -o "$ZIPFILE" 'META-INF/*' -d "/storage/emulated/0/Android/MIUI_odex/modul
 unzip -o "$ZIPFILE" 'uninstall.sh' -d "/storage/emulated/0/Android/MIUI_odex/module_files"
 [ ! -f /storage/emulated/0/Android/MIUI_odex/Simple_List.prop ] && unzip -o "$ZIPFILE" 'Simple_List.prop' -d "/storage/emulated/0/Android/MIUI_odex"
 [ -f /storage/emulated/0/Android/MIUI_odex/odex.json ] && rm -rf /storage/emulated/0/Android/MIUI_odex/odex.json
-set_perm_recursive "$MODPATH"/system/bin 0 2000 0755 0755
 set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm_recursive "$MODPATH"/system/bin 0 2000 0755 0755
 ui_print "- 安装完成,请重启后运行odex.sh"
