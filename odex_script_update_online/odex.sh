@@ -1,17 +1,31 @@
 #!/bin/bash
 # MIUI ODEX项目贡献者：柚稚的孩纸(zjw2017) & 冷洛(DavidPisces)
+# 环境检查
+if [ "$(whoami)" != "root" ]; then
+   echo "! 请使用Root运行脚本"
+   exit
+fi
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/module.prop ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/update-binary ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/updater-script ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 logfile=/storage/emulated/0/Android/MIUI_odex/log
 success_count=0
 failed_count=0
 MIUI_version_code=$(getprop ro.miui.ui.version.code)
 MIUI_version_name=$(getprop ro.miui.ui.version.name)
 modelversion="$(getprop ro.system.build.version.incremental)"
-MODPATH=/data/adb/modules/miuiodex
-now_time=$(date '+%Y%m%d_%H:%M:%S')
+if grep ksu_ /proc/kallsyms; then
+   install_method=KSU
+   MODPATH=/data/miuiodex
+elif [ -f /data/adb/magisk/magisk64 ]; then
+   install_method=MAGISK
+   MODPATH=/data/adb/modules/miuiodex
+fi
+now_time=$(date '+%Y-%m-%d_%H:%M:%S')
 SDK=$(getprop ro.system.build.version.sdk)
 time=$(date "+%Y年%m月%d日%H:%M:%S")
-version=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w "version" | cut -d '=' -f2)
-versionCode=$(cat /data/adb/modules/odex_script_update_online/module.prop | grep -w "versionCode" | cut -d '=' -f2)
+version=$(grep -w "version" /storage/emulated/0/Android/MIUI_odex/module_files/module.prop | cut -d '=' -f2)
+versionCode=$(grep -w "versionCode" /storage/emulated/0/Android/MIUI_odex/module_files/module.prop | cut -d '=' -f2)
 # MIUI ODEX自定义配置文件目录
 mkdir -p /storage/emulated/0/Android/MIUI_odex
 if [[ $SDK == 28 ]]; then
@@ -41,7 +55,7 @@ elif [[ $MIUI_version_code == 9 ]] && [[ $MIUI_version_name == V11 ]]; then
    MIUI_version=11
 fi
 mkdir -p $logfile
-echo "$(pm list packages -f -a | grep -v verlay)" >/storage/emulated/0/Android/MIUI_odex/packages.txt
+pm list packages -f -a | awk '!/overlay/' >/storage/emulated/0/Android/MIUI_odex/packages.txt
 sed -i -e 's/\ /\\\n/g' -e 's/\\//g' -e 's/package://g' /storage/emulated/0/Android/MIUI_odex/packages.txt
 touch "$logfile"/MIUI_odex_"$now_time".log
 clear
@@ -62,14 +76,7 @@ read -r choose_odex
 case $choose_odex in
 1 | 2)
    odex_module=true
-   rm -rf /data/adb/modules/miuiodex
-   [ -d "/system/product/app" ] && mkdir -p "$MODPATH"/system/product/app && is_product=0
-   [ -d "/system/product/priv-app" ] && mkdir -p "$MODPATH"/system/product/priv-app
-   [ -d "/system/product/framework" ] && mkdir -p "$MODPATH"/system/product/framework
-   [ -d "/system/system_ext/app" ] && mkdir -p "$MODPATH"/system/system_ext/app && is_system_ext=0
-   [ -d "/system/system_ext/priv-app" ] && mkdir -p "$MODPATH"/system/system_ext/priv-app
-   [ -d "/system/system_ext/framework" ] && mkdir -p "$MODPATH"/system/system_ext/framework
-   [ -d "/system/vendor/app" ] && mkdir -p "$MODPATH"/system/vendor/app && is_vendor=0
+   rm -rf "$MODPATH"
    clear
    echo "*************************************************"
    echo " "
@@ -142,45 +149,54 @@ case $choose_odex in
 esac
 if [[ "$choose_odex" != 3 ]]; then
    echo "- 开始处理/system/framework"
-   for a in $(ls -l /system/framework | awk 'NR>1 {print $NF}'); do
-      mkdir -p $MODPATH/system/framework/oat/arm $MODPATH/system/framework/oat/arm64
+   mkdir -p "$MODPATH"/system/framework/oat/arm "$MODPATH"/system/framework/oat/arm64
+   for a in /system/framework/*.jar; do
+      a=${a##*/}
       jarhead=${a%.*}
-      if [ -f /system/framework/"$jarhead".jar ]; then
-         echo "- 开始处理$a"
-         dex2oat --dex-file=/system/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file=$MODPATH/system/framework/oat/arm64/"$jarhead".odex
-         dex2oat --dex-file=/system/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file=$MODPATH/system/framework/oat/arm/"$jarhead".odex
-         echo "- 已完成对$a的处理"
-      fi
+      echo "- 开始处理$a"
+      dex2oat --dex-file=/system/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file="$MODPATH"/system/framework/oat/arm64/"$jarhead".odex
+      dex2oat --dex-file=/system/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file="$MODPATH"/system/framework/oat/arm/"$jarhead".odex
+      echo "- 已完成对$a的处理"
    done
-   if [ "$is_product" == 0 ]; then
-      echo "- 开始处理/system/product/framework"
-      for b in $(ls -l /system/product/framework | awk 'NR>1 {print $NF}'); do
-         mkdir -p $MODPATH/system/product/framework/oat/arm $MODPATH/system/product/framework/oat/arm64
+   if [ -d /product/framework ]; then
+      echo "- 开始处理/product/framework"
+      mkdir -p "$MODPATH"/system/product/framework/oat/arm "$MODPATH"/system/product/framework/oat/arm64
+      for b in /product/framework/*.jar; do
+         b=${b##*/}
          jarhead=${b%.*}
-         if [ -f /system/product/framework/"$jarhead".jar ]; then
-            echo "- 开始处理$b"
-            dex2oat --dex-file=/system/product/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file=$MODPATH/system/product/framework/oat/arm64/"$jarhead".odex
-            dex2oat --dex-file=/system/product/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file=$MODPATH/system/product/framework/oat/arm/"$jarhead".odex
-            echo "- 已完成对$b的处理"
-         fi
+         echo "- 开始处理$b"
+         dex2oat --dex-file=/product/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file="$MODPATH"/system/product/framework/oat/arm64/"$jarhead".odex
+         dex2oat --dex-file=/product/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file="$MODPATH"/system/product/framework/oat/arm/"$jarhead".odex
+         echo "- 已完成对$b的处理"
       done
    fi
-   if [ "$is_system_ext" == 0 ]; then
-      echo "- 开始处理/system/system_ext/framework"
-      for c in $(ls -l /system/system_ext/framework | awk 'NR>1 {print $NF}'); do
-         mkdir -p $MODPATH/system/system_ext/framework/oat/arm $MODPATH/system/system_ext/framework/oat/arm64
+   if [ -d /system_ext/framework ]; then
+      echo "- 开始处理/system_ext/framework"
+      mkdir -p "$MODPATH"/system/system_ext/framework/oat/arm "$MODPATH"/system/system_ext/framework/oat/arm64
+      for c in /system_ext/framework/*.jar; do
+         c=${c##*/}
          jarhead=${c%.*}
-         if [ -f /system/system_ext/framework/"$jarhead".jar ]; then
-            echo "- 开始处理$c"
-            dex2oat --dex-file=/system/system_ext/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file=$MODPATH/system/system_ext/framework/oat/arm64/"$jarhead".odex
-            dex2oat --dex-file=/system/system_ext/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file=$MODPATH/system/system_ext/framework/oat/arm/"$jarhead".odex
-            echo "- 已完成对$c的处理"
-         fi
+         echo "- 开始处理$c"
+         dex2oat --dex-file=/system_ext/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file="$MODPATH"/system/system_ext/framework/oat/arm64/"$jarhead".odex
+         dex2oat --dex-file=/system_ext/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file="$MODPATH"/system/system_ext/framework/oat/arm/"$jarhead".odex
+         echo "- 已完成对$c的处理"
+      done
+   fi
+   if [ -d /vendor/framework ]; then
+      echo "- 开始处理/vendor/framework"
+      mkdir -p "$MODPATH"/system/vendor/framework/oat/arm "$MODPATH"/system/vendor/framework/oat/arm64
+      for l in /vendor/framework/*.jar; do
+         l=${l##*/}
+         jarhead=${l%.*}
+         echo "- 开始处理$l"
+         dex2oat --dex-file=/vendor/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm64 --oat-file="$MODPATH"/system/vendor/framework/oat/arm64/"$jarhead".odex
+         dex2oat --dex-file=/vendor/framework/"$jarhead".jar --compiler-filter=everything --instruction-set=arm --oat-file="$MODPATH"/system/vendor/framework/oat/arm/"$jarhead".odex
+         echo "- 已完成对$l的处理"
       done
    fi
    if [[ "$choose_odex" == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
-      for app_list in $(cat /storage/emulated/0/Android/MIUI_odex/Simple_List.prop | grep -v "#"); do
+      while IFS= read -r app_list; do
          var=$app_list
          record="$(eval cat /storage/emulated/0/Android/MIUI_odex/packages.txt | grep "$var"$)"
          apk_path="${record%=*}"
@@ -209,10 +225,11 @@ if [[ "$choose_odex" != 3 ]]; then
                echo "- 已完成对$app_list的odex分离处理"
             fi
          fi
-      done
+      done < <(grep -v "^#" /storage/emulated/0/Android/MIUI_odex/Simple_List.prop)
    elif [[ "$choose_odex" == 2 ]]; then
       echo "- 开始处理/system/app"
-      for d in $(ls -l /system/app | awk '/^d/ {print $NF}'); do
+      for d in /system/app/*; do
+         d=${d##*/}
          if [ -f /system/app/"$d"/"$d".apk ]; then
             if [ "$(unzip -l /system/app/"$d"/"$d".apk | grep classes.dex)" != "" ]; then
                echo "! 已检测到dex文件，开始编译"
@@ -240,7 +257,8 @@ if [[ "$choose_odex" != 3 ]]; then
          fi
       done
       echo "- 开始处理/system/priv-app"
-      for e in $(ls -l /system/priv-app | awk '/^d/ {print $NF}'); do
+      for e in /system/priv-app/*; do
+         e=${e##*/}
          if [ -f /system/priv-app/"$e"/"$e".apk ]; then
             if [ "$(unzip -l /system/priv-app/"$e"/"$e".apk | grep classes.dex)" != "" ]; then
                echo "! 已检测到dex文件，开始编译"
@@ -267,13 +285,14 @@ if [[ "$choose_odex" != 3 ]]; then
             ((failed_count++))
          fi
       done
-      if [ "$is_product" == 0 ]; then
-         echo "- 开始处理/system/product/app"
-         for f in $(ls -l /system/product/app | awk '/^d/ {print $NF}'); do
-            if [ -f /system/product/app/"$f"/"$f".apk ]; then
-               if [ "$(unzip -l /system/product/app/"$f"/"$f".apk | grep classes.dex)" != "" ]; then
+      if [ -d "/product/app" ]; then
+         echo "- 开始处理/product/app"
+         for f in /product/app/*; do
+            f=${f##*/}
+            if [ -f /product/app/"$f"/"$f".apk ]; then
+               if [ "$(unzip -l /product/app/"$f"/"$f".apk | grep classes.dex)" != "" ]; then
                   echo "! 已检测到dex文件，开始编译"
-                  if [[ "$(unzip -l /system/product/app/"$f"/"$f".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system/product/app/"$f"/"$f".apk | grep lib/arm64)" != "" ]]; then
+                  if [[ "$(unzip -l /product/app/"$f"/"$f".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /product/app/"$f"/"$f".apk | grep lib/arm64)" != "" ]]; then
                      apk_abi=arm64
                      echo "- 该应用为64位应用"
                   else
@@ -282,26 +301,27 @@ if [[ "$choose_odex" != 3 ]]; then
                   fi
                   mkdir -p "$MODPATH"/system/product/app/"$f"/oat/"$apk_abi"
                   echo "- 开始处理$f"
-                  dex2oat --dex-file=/system/product/app/"$f"/"$f".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/product/app/"$f"/oat/"$apk_abi"/"$f".odex
+                  dex2oat --dex-file=/product/app/"$f"/"$f".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/product/app/"$f"/oat/"$apk_abi"/"$f".odex
                   echo "- 已完成对$f的odex分离处理"
                   ((success_count++))
                else
                   echo "! 未检测到dex文件，跳过编译"
                   ((failed_count++))
-                  echo "/system/product/app/$f/$f.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+                  echo "/product/app/$f/$f.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
                fi
             else
                echo "! 编译$f失败，没有apk文件"
-               echo "/system/product/app/$f/$f.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               echo "/product/app/$f/$f.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
                ((failed_count++))
             fi
          done
-         echo "- 开始处理/system/product/priv-app"
-         for g in $(ls -l /system/product/priv-app | awk '/^d/ {print $NF}'); do
-            if [ -f /system/product/priv-app/"$g"/"$g".apk ]; then
-               if [ "$(unzip -l /system/product/priv-app/"$g"/"$g".apk | grep classes.dex)" != "" ]; then
+         echo "- 开始处理/product/priv-app"
+         for g in /product/priv-app/*; do
+            g=${g##*/}
+            if [ -f /product/priv-app/"$g"/"$g".apk ]; then
+               if [ "$(unzip -l /product/priv-app/"$g"/"$g".apk | grep classes.dex)" != "" ]; then
                   echo "! 已检测到dex文件，开始编译"
-                  if [[ "$(unzip -l /system/product/priv-app/"$g"/"$g".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system/product/priv-app/"$g"/"$g".apk | grep lib/arm64)" != "" ]]; then
+                  if [[ "$(unzip -l /product/priv-app/"$g"/"$g".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /product/priv-app/"$g"/"$g".apk | grep lib/arm64)" != "" ]]; then
                      apk_abi=arm64
                      echo "- 该应用为64位应用"
                   else
@@ -310,28 +330,29 @@ if [[ "$choose_odex" != 3 ]]; then
                   fi
                   mkdir -p "$MODPATH"/system/product/priv-app/"$g"/oat/"$apk_abi"
                   echo "- 开始处理$g"
-                  dex2oat --dex-file=/system/product/priv-app/"$g"/"$g".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/product/priv-app/"$g"/oat/"$apk_abi"/"$g".odex
+                  dex2oat --dex-file=/product/priv-app/"$g"/"$g".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/product/priv-app/"$g"/oat/"$apk_abi"/"$g".odex
                   echo "- 已完成对$g的odex分离处理"
                   ((success_count++))
                else
                   echo "! 未检测到dex文件，跳过编译"
                   ((failed_count++))
-                  echo "/system/product/priv-app/$g/$g.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+                  echo "/product/priv-app/$g/$g.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
                fi
             else
                echo "! 编译$g失败，没有apk文件"
-               echo "/system/product/priv-app/$g/$g.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               echo "/product/priv-app/$g/$g.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
                ((failed_count++))
             fi
          done
       fi
-      if [ "$is_system_ext" == 0 ]; then
-         echo "- 开始处理/system/system_ext/app"
-         for h in $(ls -l /system/system_ext/app | awk '/^d/ {print $NF}'); do
-            if [ -f /system/system_ext/app/"$h"/"$h".apk ]; then
-               if [ "$(unzip -l /system/system_ext/app/"$h"/"$h".apk | grep classes.dex)" != "" ]; then
+      if [ -d "/system_ext/app" ]; then
+         echo "- 开始处理/system_ext/app"
+         for h in /system_ext/app/*; do
+            h=${h##*/}
+            if [ -f /system_ext/app/"$h"/"$h".apk ]; then
+               if [ "$(unzip -l /system_ext/app/"$h"/"$h".apk | grep classes.dex)" != "" ]; then
                   echo "! 已检测到dex文件，开始编译"
-                  if [[ "$(unzip -l /system/system_ext/app/"$h"/"$h".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system/system_ext/app/"$h"/"$h".apk | grep lib/arm64)" != "" ]]; then
+                  if [[ "$(unzip -l /system_ext/app/"$h"/"$h".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system_ext/app/"$h"/"$h".apk | grep lib/arm64)" != "" ]]; then
                      apk_abi=arm64
                      echo "- 该应用为64位应用"
                   else
@@ -340,26 +361,27 @@ if [[ "$choose_odex" != 3 ]]; then
                   fi
                   mkdir -p "$MODPATH"/system/system_ext/app/"$h"/oat/"$apk_abi"
                   echo "- 开始处理$h"
-                  dex2oat --dex-file=/system/system_ext/app/"$h"/"$h".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/system_ext/app/"$h"/oat/"$apk_abi"/"$h".odex
+                  dex2oat --dex-file=/system_ext/app/"$h"/"$h".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/system_ext/app/"$h"/oat/"$apk_abi"/"$h".odex
                   echo "- 已完成对$h的odex分离处理"
                   ((success_count++))
                else
                   echo "! 未检测到dex文件，跳过编译"
                   ((failed_count++))
-                  echo "/system/system_ext/app/$h/$h.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+                  echo "/system_ext/app/$h/$h.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
                fi
             else
                echo "! 解/oat/压$h失败，没有apk文件"
-               echo "/system/system_ext/app/$h/$h.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               echo "/system_ext/app/$h/$h.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
                ((failed_count++))
             fi
          done
-         echo "- 开始处理/system/system_ext/priv-app"
-         for i in $(ls -l /system/system_ext/priv-app | awk '/^d/ {print $NF}'); do
-            if [ -f /system/system_ext/priv-app/"$i"/"$i".apk ]; then
-               if [ "$(unzip -l /system/system_ext/priv-app/"$i"/"$i".apk | grep classes.dex)" != "" ]; then
+         echo "- 开始处理/system_ext/priv-app"
+         for i in /system_ext/priv-app/*; do
+            i=${i##*/}
+            if [ -f /system_ext/priv-app/"$i"/"$i".apk ]; then
+               if [ "$(unzip -l /system_ext/priv-app/"$i"/"$i".apk | grep classes.dex)" != "" ]; then
                   echo "! 已检测到dex文件，开始编译"
-                  if [[ "$(unzip -l /system/system_ext/priv-app/"$i"/"$i".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system/system_ext/priv-app/"$i"/"$i".apk | grep lib/arm64)" != "" ]]; then
+                  if [[ "$(unzip -l /system_ext/priv-app/"$i"/"$i".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system_ext/priv-app/"$i"/"$i".apk | grep lib/arm64)" != "" ]]; then
                      apk_abi=arm64
                      echo "- 该应用为64位应用"
                   else
@@ -368,28 +390,29 @@ if [[ "$choose_odex" != 3 ]]; then
                   fi
                   mkdir -p "$MODPATH"/system/system_ext/priv-app/"$i"/oat/"$apk_abi"
                   echo "- 开始处理$i"
-                  dex2oat --dex-file=/system/system_ext/priv-app/"$i"/"$i".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/system_ext/priv-app/"$i"/oat/"$apk_abi"/"$i".odex
+                  dex2oat --dex-file=/system_ext/priv-app/"$i"/"$i".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/system_ext/priv-app/"$i"/oat/"$apk_abi"/"$i".odex
                   echo "- 已完成对$i的odex分离处理"
                   ((success_count++))
                else
                   echo "! 未检测到dex文件，跳过编译"
                   ((failed_count++))
-                  echo "/system/system_ext/priv-app/$i/$i.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+                  echo "/system_ext/priv-app/$i/$i.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
                fi
             else
                echo "! 编译$i失败，没有apk文件"
-               echo "/system/system_ext/priv-app/$i/$i.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               echo "/system_ext/priv-app/$i/$i.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
                ((failed_count++))
             fi
          done
       fi
-      if [ "$is_vendor" == 0 ]; then
-         echo "- 开始处理/system/vendor/app"
-         for j in $(ls -l /system/vendor/app | awk '/^d/ {print $NF}'); do
-            if [ -f /system/vendor/app/"$j"/"$j".apk ]; then
-               if [ "$(unzip -l /system/vendor/app/"$j"/"$j".apk | grep classes.dex)" != "" ]; then
+      if [ -d "/vendor/app" ]; then
+         echo "- 开始处理/vendor/app"
+         for j in /vendor/app/*; do
+            j=${j##*/}
+            if [ -f /vendor/app/"$j"/"$j".apk ]; then
+               if [ "$(unzip -l /vendor/app/"$j"/"$j".apk | grep classes.dex)" != "" ]; then
                   echo "! 已检测到dex文件，开始编译"
-                  if [[ "$(unzip -l /system/vendor/app/"$j"/"$j".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /system/vendor/app/"$j"/"$j".apk | grep lib/arm64)" != "" ]]; then
+                  if [[ "$(unzip -l /vendor/app/"$j"/"$j".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /vendor/app/"$j"/"$j".apk | grep lib/arm64)" != "" ]]; then
                      apk_abi=arm64
                      echo "- 该应用为64位应用"
                   else
@@ -398,17 +421,48 @@ if [[ "$choose_odex" != 3 ]]; then
                   fi
                   mkdir -p "$MODPATH"/system/vendor/app/"$j"/oat/"$apk_abi"
                   echo "- 开始处理$j"
-                  dex2oat --dex-file=/system/vendor/app/"$j"/"$j".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/vendor/app/"$j"/oat/"$apk_abi"/"$j".odex
+                  dex2oat --dex-file=/vendor/app/"$j"/"$j".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/vendor/app/"$j"/oat/"$apk_abi"/"$j".odex
                   echo "- 已完成对$j的odex分离处理"
                   ((success_count++))
                else
                   echo "! 未检测到dex文件，跳过编译"
                   ((failed_count++))
-                  echo "/system/vendor/app/$j/$j.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+                  echo "/vendor/app/$j/$j.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
                fi
             else
                echo "! 编译$j失败，没有apk文件"
-               echo "/system/vendor/app/$j/$j.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               echo "/vendor/app/$j/$j.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               ((failed_count++))
+            fi
+         done
+      fi
+      if [ -d "/odm/app" ]; then
+         echo "- 开始处理/odm/app"
+         for k in /odm/app/*; do
+            k=${k##*/}
+            if [ -f /odm/app/"$k"/"$k".apk ]; then
+               if [ "$(unzip -l /odm/app/"$k"/"$k".apk | grep classes.dex)" != "" ]; then
+                  echo "! 已检测到dex文件，开始编译"
+                  if [[ "$(unzip -l /odm/app/"$k"/"$k".apk | grep lib/)" == "" ]] || [[ "$(unzip -l /odm/app/"$k"/"$k".apk | grep lib/arm64)" != "" ]]; then
+                     apk_abi=arm64
+                     echo "- 该应用为64位应用"
+                  else
+                     apk_abi=arm
+                     echo "- 该应用为32位应用"
+                  fi
+                  mkdir -p "$MODPATH"/system/vendor/odm/app/"$k"/oat/"$apk_abi"
+                  echo "- 开始处理$k"
+                  dex2oat --dex-file=/odm/app/"$k"/"$k".apk --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH"/system/vendor/odm/app/"$k"/oat/"$apk_abi"/"$k".odex
+                  echo "- 已完成对$k的odex分离处理"
+                  ((success_count++))
+               else
+                  echo "! 未检测到dex文件，跳过编译"
+                  ((failed_count++))
+                  echo "/odm/app/$k/$k.apk ：编译失败，没有dex文件" >>"$logfile"/MIUI_odex_"$now_time".log
+               fi
+            else
+               echo "! 编译$k失败，没有apk文件"
+               echo "/odm/app/$k/$k.apk ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
                ((failed_count++))
             fi
          done
@@ -417,7 +471,7 @@ if [[ "$choose_odex" != 3 ]]; then
    fi
    if [ $odex_module == true ]; then
       echo "- 正在制作模块，请坐和放宽"
-      touch /data/adb/modules/miuiodex/module.prop
+      touch "$MODPATH"/module.prop
       {
          echo "id=miuiodex"
          echo "name=MIUI ODEX"
@@ -425,12 +479,27 @@ if [[ "$choose_odex" != 3 ]]; then
          echo "versionCode=$versionCode"
          echo "author=柚稚的孩纸&冷洛"
          echo "description=分离系统软件ODEX，MIUI$MIUI_version $modelversion Android$android_version，编译时间$time"
-      } >>/data/adb/modules/miuiodex/module.prop
+      } >>"$MODPATH"/module.prop
       for partition in vendor odm product system_ext; do
-         [ -d $MODPATH/$partition ] && mv $MODPATH/$partition/* $MODPATH/system/$partition && rm -rf $MODPATH/$partition
+         if [ -d "$MODPATH"/$partition ]; then
+            if [[ "$partition" == "odm" ]]; then
+               [ ! -d "$MODPATH"/system/vendor ] && mkdir -p "$MODPATH"/system/vendor
+               mv "$MODPATH"/$partition "$MODPATH"/system/vendor
+            else
+               mv "$MODPATH"/$partition "$MODPATH"/system
+            fi
+            rm -rf "${MODPATH:?}"/"${partition:?}"
+         fi
       done
-      find /data/adb/modules/miuiodex -type d -empty -delete >/dev/null
-      echo "- 模块制作完成，请重启生效"
+      find "$MODPATH" -type d -empty -delete >/dev/null
+      if [ "$install_method" == "KSU" ]; then
+         mv "$MODPATH"/* /storage/emulated/0/Android/MIUI_odex/module_files
+         7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip "$MODPATH"/*
+         echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip"
+         rm -rf "$MODPATH"
+      else
+         echo "- 模块制作完成，请重启生效"
+      fi
       sleep 5s
    else
       echo "- 未选择编译ODEX选项，不会生成模块"
@@ -442,14 +511,13 @@ if [[ "$dex2oat_mode" != null ]]; then
    find /data/app -name "base.apk" >/storage/emulated/0/Android/MIUI_odex/packages2.txt
    appnumber=0
    echo "- 正在统计待处理应用数量"
-   for apk_path in $(cat /storage/emulated/0/Android/MIUI_odex/packages2.txt); do
-      apk_dir="${apk_path%/*}"
+   while IFS= read -r apk_path; do
       if [ "$(unzip -l "$apk_path" | grep classes.dex)" != "" ]; then
          ((apptotalnumber++))
       fi
-   done
+   done </storage/emulated/0/Android/MIUI_odex/packages2.txt
    echo "- 待处理应用数量：$apptotalnumber"
-   for apk_path in $(cat /storage/emulated/0/Android/MIUI_odex/packages2.txt); do
+   while IFS= read -r apk_path; do
       apk_dir="${apk_path%/*}"
       record="$(eval cat /storage/emulated/0/Android/MIUI_odex/packages.txt | grep ^"$apk_path")"
       echo "- 开始处理${record##*=}"
@@ -471,7 +539,7 @@ if [[ "$dex2oat_mode" != null ]]; then
       fi
       percentage=$((appnumber * 100 / apptotalnumber))
       echo "已完成 $percentage%   $appnumber / $apptotalnumber"
-   done
+   done </storage/emulated/0/Android/MIUI_odex/packages2.txt
 else
    echo "- 不进行Dex2oat编译"
 fi
