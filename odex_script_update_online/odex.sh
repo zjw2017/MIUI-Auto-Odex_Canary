@@ -5,7 +5,7 @@ if [ "$(whoami)" != "root" ]; then
    echo "! 请使用Root运行脚本"
    exit
 fi
-[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/module.prop ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module.prop ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/update-binary ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/updater-script ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 logfile=/storage/emulated/0/Android/MIUI_odex/log
@@ -24,8 +24,8 @@ fi
 now_time=$(date '+%Y-%m-%d_%H:%M:%S')
 SDK=$(getprop ro.system.build.version.sdk)
 time=$(date "+%Y年%m月%d日%H:%M:%S")
-version=$(grep -w "version" /storage/emulated/0/Android/MIUI_odex/module_files/module.prop | cut -d '=' -f2)
-versionCode=$(grep -w "versionCode" /storage/emulated/0/Android/MIUI_odex/module_files/module.prop | cut -d '=' -f2)
+version=$(grep -w "version" /storage/emulated/0/Android/MIUI_odex/module.prop | cut -d '=' -f2)
+versionCode=$(grep -w "versionCode" /storage/emulated/0/Android/MIUI_odex/module.prop | cut -d '=' -f2)
 # MIUI ODEX自定义配置文件目录
 mkdir -p /storage/emulated/0/Android/MIUI_odex
 if [[ $SDK == 28 ]]; then
@@ -496,9 +496,10 @@ if [[ "$choose_odex" != 3 ]]; then
       if [ "$install_method" == "KSU" ]; then
          mv "$MODPATH"/* /storage/emulated/0/Android/MIUI_odex/module_files
          7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip "$MODPATH"/*
-         echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip"
-         rm -rf "$MODPATH"
+         echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-$time.zip"
+         rm -rf "$MODPATH" /storage/emulated/0/Android/MIUI_odex/module_files/system /storage/emulated/0/Android/MIUI_odex/module_files/module.prop
       else
+         cp -f /storage/emulated/0/Android/MIUI_odex/module_files/uninstall.sh "$MODPATH"
          echo "- 模块制作完成，请重启生效"
       fi
       sleep 5s
