@@ -196,6 +196,7 @@ if [[ "$choose_odex" != 3 ]]; then
    fi
    if [[ "$choose_odex" == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
+      grep -v "#" /storage/emulated/0/Android/MIUI_odex/Simple_List.prop >/storage/emulated/0/Android/MIUI_odex/packages2.txt
       while IFS= read -r app_list; do
          var=$app_list
          record="$(eval cat /storage/emulated/0/Android/MIUI_odex/packages.txt | grep "$var"$)"
@@ -225,7 +226,7 @@ if [[ "$choose_odex" != 3 ]]; then
                echo "- 已完成对$app_list的odex分离处理"
             fi
          fi
-      done < <(grep -v "^#" /storage/emulated/0/Android/MIUI_odex/Simple_List.prop)
+      done </storage/emulated/0/Android/MIUI_odex/packages2.txt
    elif [[ "$choose_odex" == 2 ]]; then
       echo "- 开始处理/system/app"
       for d in /system/app/*; do
@@ -508,14 +509,14 @@ else
    echo "- 不进行ODEX编译"
 fi
 if [[ "$dex2oat_mode" != null ]]; then
-   find /data/app -name "base.apk" >/storage/emulated/0/Android/MIUI_odex/packages2.txt
+   find /data/app -name "base.apk" >/storage/emulated/0/Android/MIUI_odex/packages3.txt
    appnumber=0
    echo "- 正在统计待处理应用数量"
    while IFS= read -r apk_path; do
       if [ "$(unzip -l "$apk_path" | grep classes.dex)" != "" ]; then
          ((apptotalnumber++))
       fi
-   done </storage/emulated/0/Android/MIUI_odex/packages2.txt
+   done </storage/emulated/0/Android/MIUI_odex/packages3.txt
    echo "- 待处理应用数量：$apptotalnumber"
    while IFS= read -r apk_path; do
       apk_dir="${apk_path%/*}"
@@ -539,9 +540,10 @@ if [[ "$dex2oat_mode" != null ]]; then
       fi
       percentage=$((appnumber * 100 / apptotalnumber))
       echo "已完成 $percentage%   $appnumber / $apptotalnumber"
-   done </storage/emulated/0/Android/MIUI_odex/packages2.txt
+   done </storage/emulated/0/Android/MIUI_odex/packages3.txt
 else
    echo "- 不进行Dex2oat编译"
 fi
 rm -rf /storage/emulated/0/Android/MIUI_odex/packages.txt
 rm -rf /storage/emulated/0/Android/MIUI_odex/packages2.txt
+rm -rf /storage/emulated/0/Android/MIUI_odex/packages3.txt
