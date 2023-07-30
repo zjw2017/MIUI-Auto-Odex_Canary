@@ -57,6 +57,7 @@ fi
 mkdir -p $logfile
 pm list packages -f -a | awk '!/overlay/' >/storage/emulated/0/Android/MIUI_odex/packages.txt
 sed -i -e 's/\ /\\\n/g' -e 's/\\//g' -e 's/package://g' /storage/emulated/0/Android/MIUI_odex/packages.txt
+sed -i '/^$/d' /storage/emulated/0/Android/MIUI_odex/packages.txt
 touch "$logfile"/MIUI_odex_"$now_time".log
 clear
 echo "*************************************************"
@@ -197,6 +198,7 @@ if [[ "$choose_odex" != 3 ]]; then
    if [[ "$choose_odex" == 1 ]]; then
       echo "- 正在以Simple(简单)模式编译"
       grep -v "#" /storage/emulated/0/Android/MIUI_odex/Simple_List.prop >/storage/emulated/0/Android/MIUI_odex/packages2.txt
+      sed -i '/^$/d' /storage/emulated/0/Android/MIUI_odex/packages2.txt
       while IFS= read -r app_list; do
          var=$app_list
          record="$(eval cat /storage/emulated/0/Android/MIUI_odex/packages.txt | grep "$var"$)"
@@ -495,7 +497,7 @@ if [[ "$choose_odex" != 3 ]]; then
       find "$MODPATH" -type d -empty -delete >/dev/null
       if [ "$install_method" == "KSU" ]; then
          mv "$MODPATH"/* /storage/emulated/0/Android/MIUI_odex/module_files
-         7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip "$MODPATH"/*
+         7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip /storage/emulated/0/Android/MIUI_odex/module_files/*
          echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-$time.zip"
          rm -rf "$MODPATH" /storage/emulated/0/Android/MIUI_odex/module_files/system /storage/emulated/0/Android/MIUI_odex/module_files/module.prop
       else
@@ -511,6 +513,7 @@ else
 fi
 if [[ "$dex2oat_mode" != null ]]; then
    find /data/app -name "base.apk" >/storage/emulated/0/Android/MIUI_odex/packages3.txt
+   sed -i '/^$/d' /storage/emulated/0/Android/MIUI_odex/packages3.txt
    appnumber=0
    echo "- 正在统计待处理应用数量"
    while IFS= read -r apk_path; do
