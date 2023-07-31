@@ -6,6 +6,7 @@ if [ "$(whoami)" != "root" ]; then
    exit
 fi
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module.prop ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/uninstall.sh ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/update-binary ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/updater-script ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 logfile=/storage/emulated/0/Android/MIUI_odex/log
@@ -207,26 +208,31 @@ if [[ "$choose_odex" != 3 ]]; then
          apk_name="${apk_path##*/}"
          apk_name="${apk_name%.*}"
          apk_source="$(echo "$apk_dir" | cut -d"/" -f2)"
-         echo "- 开始处理$app_list"
-         if [[ "$(unzip -l "$apk_path" | grep lib/)" == "" ]] || [[ "$(unzip -l "$apk_path" | grep lib/arm64)" != "" ]]; then
-            apk_abi=arm64
-            echo "- 该应用为64位应用"
-         else
-            apk_abi=arm
-            echo "- 该应用为32位应用"
-         fi
-         if [[ "$apk_source" == "data" ]]; then
-            if [ "$(unzip -l "$apk_path" | grep classes.dex)" != "" ]; then
-               rm -rf "$apk_dir"/oat/"$apk_abi"/*
-               dex2oat --dex-file="$apk_path" --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$apk_dir"/oat/"$apk_abi"/base.odex
-               echo "- 已完成对$app_list的odex分离处理"
+         if [ -n "$record" ]; then
+            echo "- 开始处理$app_list"
+            if [[ "$(unzip -l "$apk_path" | grep lib/)" == "" ]] || [[ "$(unzip -l "$apk_path" | grep lib/arm64)" != "" ]]; then
+               apk_abi=arm64
+               echo "- 该应用为64位应用"
+            else
+               apk_abi=arm
+               echo "- 该应用为32位应用"
             fi
-         else
             if [ "$(unzip -l "$apk_path" | grep classes.dex)" != "" ]; then
-               mkdir -p "$MODPATH""$apk_dir"/oat/"$apk_abi"
-               dex2oat --dex-file="$apk_path" --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH""$apk_dir"/oat/"$apk_abi"/"$apk_name".odex
-               echo "- 已完成对$app_list的odex分离处理"
+               if [[ "$apk_source" == "data" ]]; then
+                  rm -rf "$apk_dir"/oat/"$apk_abi"/*
+                  dex2oat --dex-file="$apk_path" --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$apk_dir"/oat/"$apk_abi"/base.odex
+                  echo "- 已完成对$app_list的odex分离处理"
+               else
+                  mkdir -p "$MODPATH""$apk_dir"/oat/"$apk_abi"
+                  dex2oat --dex-file="$apk_path" --compiler-filter=everything --instruction-set="$apk_abi" --oat-file="$MODPATH""$apk_dir"/oat/"$apk_abi"/"$apk_name".odex
+                  echo "- 已完成对$app_list的odex分离处理"
+               fi
             fi
+            ((success_count++))
+         else
+            echo "! 编译$app_list失败，没有apk文件"
+            echo "$app_list ：编译失败，没有apk文件" >>"$logfile"/MIUI_odex_"$now_time".log
+            ((failed_count++))
          fi
       done </storage/emulated/0/Android/MIUI_odex/packages2.txt
    elif [[ "$choose_odex" == 2 ]]; then
@@ -470,9 +476,9 @@ if [[ "$choose_odex" != 3 ]]; then
             fi
          done
       fi
-      echo "- 共$success_count次成功，$failed_count次失败，请检查$logfile中的日志"
    fi
    if [ $odex_module == true ]; then
+      echo "- 共$success_count次成功，$failed_count次失败，请检查$logfile中的日志"
       echo "- 正在制作模块，请坐和放宽"
       touch "$MODPATH"/module.prop
       {
@@ -486,10 +492,11 @@ if [[ "$choose_odex" != 3 ]]; then
       for partition in vendor odm product system_ext; do
          if [ -d "$MODPATH"/$partition ]; then
             if [[ "$partition" == "odm" ]]; then
-               [ ! -d "$MODPATH"/system/vendor ] && mkdir -p "$MODPATH"/system/vendor
-               mv "$MODPATH"/$partition "$MODPATH"/system/vendor
+               mkdir -p "$MODPATH"/system/vendor/$partition
+               mv "$MODPATH"/$partition/* "$MODPATH"/system/vendor/$partition
             else
-               mv "$MODPATH"/$partition "$MODPATH"/system
+               mkdir -p "$MODPATH"/system/$partition
+               mv "$MODPATH"/$partition/* "$MODPATH"/system/$partition
             fi
             rm -rf "${MODPATH:?}"/"${partition:?}"
          fi
