@@ -1,11 +1,28 @@
 #!/bin/bash
 # MIUI ODEX项目贡献者：柚稚的孩纸(zjw2017) & 冷洛(DavidPisces)
+# 权限设置函数
+set_perm() {
+   chown "$2":"$3" "$1" || return 1
+   chmod "$4" "$1" || return 1
+   local CON="$5"
+   [ -z "$CON" ] && CON=u:object_r:system_file:s0
+   chcon "$CON" "$1" || return 1
+}
+set_perm_recursive() {
+   find "$1" -type d 2>/dev/null | while read -r dir; do
+      set_perm "$dir" "$2" "$3" "$4" "$6"
+   done
+   find "$1" -type f -o -type l 2>/dev/null | while read -r file; do
+      set_perm "$file" "$2" "$3" "$5" "$6"
+   done
+}
 # 环境检查
 if [ "$(whoami)" != "root" ]; then
    echo "! 请使用Root运行脚本"
    exit
 fi
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module.prop ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
+[ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/customize.sh ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/uninstall.sh ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/update-binary ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
 [ ! -f /storage/emulated/0/Android/MIUI_odex/module_files/META-INF/com/google/android/updater-script ] && echo "! 必备文件丢失，请重刷MIUI ODEX 脚本更新模块" && exit
@@ -509,6 +526,10 @@ if [[ "$choose_odex" != 3 ]]; then
          rm -rf "$MODPATH" /storage/emulated/0/Android/MIUI_odex/module_files/system /storage/emulated/0/Android/MIUI_odex/module_files/module.prop
       else
          cp -f /storage/emulated/0/Android/MIUI_odex/module_files/uninstall.sh "$MODPATH"
+         set_perm_recursive "$MODPATH" 0 0 0755 0644
+         [ -d "$MODPATH"/system/vendor/app ] && set_perm_recursive "$MODPATH"/system/vendor/app 0 0 0755 0644 u:object_r:vendor_file:s0
+         [ -d "$MODPATH"/system/vendor/odm/app ] && set_perm_recursive "$MODPATH"/system/vendor/odm/app 0 0 0755 0644 u:object_r:vendor_file:s0
+         [ -d "$MODPATH"/system/vendor/framework ] && set_perm_recursive "$MODPATH"/system/vendor/framework 0 0 0755 0644 u:object_r:vendor_framework_file:s0
          echo "- 模块制作完成，请重启生效"
       fi
       sleep 5s
