@@ -504,7 +504,7 @@ if [[ "$choose_odex" != 3 ]]; then
       find "$MODPATH" -type d -empty -delete >/dev/null
       if [ "$install_method" == "KSU" ]; then
          mv "$MODPATH"/* /storage/emulated/0/Android/MIUI_odex/module_files
-         7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip /storage/emulated/0/Android/MIUI_odex/module_files/*
+         7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip /storage/emulated/0/Android/MIUI_odex/module_files/* >/dev/null 2>&1
          echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-$time.zip"
          rm -rf "$MODPATH" /storage/emulated/0/Android/MIUI_odex/module_files/system /storage/emulated/0/Android/MIUI_odex/module_files/module.prop
       else
