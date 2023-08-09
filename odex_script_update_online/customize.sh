@@ -23,7 +23,6 @@ if [ ! -d /storage/emulated/0/Android/MIUI_odex/module_files ]; then
   mkdir -p /storage/emulated/0/Android/MIUI_odex/module_files
 fi
 rm -rf /data/system/package_cache/*
-unzip -o "$ZIPFILE" 'customize.sh' -d "$MODPATH"
 unzip -o "$ZIPFILE" 'module.prop' -d "$MODPATH"
 unzip -o "$ZIPFILE" 'uninstall.sh' -d "$MODPATH"
 unzip -o "$ZIPFILE" 'system/*' -d "$MODPATH"
