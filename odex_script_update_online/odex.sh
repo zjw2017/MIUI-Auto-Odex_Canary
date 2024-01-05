@@ -31,7 +31,10 @@ success_count=0
 failed_count=0
 MIUI_version_code=$(getprop ro.miui.ui.version.code)
 MIUI_version_name=$(getprop ro.miui.ui.version.name)
-modelversion="$(getprop ro.system.build.version.incremental)"
+MIUI_modelversion="$(getprop ro.system.build.version.incremental)"
+HyperOS_version_code=$(getprop ro.mi.os.version.code)
+HyperOS_version_name=$(getprop ro.mi.os.version.name)
+HyperOS_modelversion="$(getprop ro.mi.os.version.incremental)"
 if grep ksu_ /proc/kallsyms; then
    install_method=KSU
    MODPATH=/data/miuiodex
@@ -58,7 +61,10 @@ elif [[ $SDK == 32 ]]; then
    android_version=12L
 elif [[ $SDK == 33 ]]; then
    android_version=13
+elif [[ $SDK == 34 ]]; then
+   android_version=14
 fi
+if [ -z "$HyperOS_version_code" ];then
 if [[ $MIUI_version_code == 14 ]] && [[ $MIUI_version_name == V140 ]]; then
    MIUI_version=14
 elif [[ $MIUI_version_code == 13 ]] && [[ $MIUI_version_name == V130 ]]; then
@@ -71,6 +77,11 @@ elif [[ $MIUI_version_code == 10 ]] && [[ $MIUI_version_name == V12 ]]; then
    MIUI_version=12
 elif [[ $MIUI_version_code == 9 ]] && [[ $MIUI_version_name == V11 ]]; then
    MIUI_version=11
+fi
+else
+if [[ $HyperOS_version_code == 1 ]] && [[ $HyperOS_version_name == "OS1.0" ]]; then
+   HyperOS_version="1.0"
+fi
 fi
 mkdir -p $logfile
 pm list packages -f -a | awk '!/overlay/' >/storage/emulated/0/Android/MIUI_odex/packages.txt
@@ -497,6 +508,7 @@ if [[ "$choose_odex" != 3 ]]; then
    if [ $odex_module == true ]; then
       echo "- 共$success_count次成功，$failed_count次失败，请检查$logfile中的日志"
       echo "- 正在制作模块，请坐和放宽"
+      if [ -z "$HyperOS_version_code" ];then
       touch "$MODPATH"/module.prop
       {
          echo "id=miuiodex"
@@ -504,8 +516,19 @@ if [[ "$choose_odex" != 3 ]]; then
          echo "version=$version"
          echo "versionCode=$versionCode"
          echo "author=柚稚的孩纸&冷洛"
-         echo "description=分离系统软件ODEX，MIUI$MIUI_version $modelversion Android$android_version，编译时间$time"
+         echo "description=分离系统软件ODEX，MIUI$MIUI_version $MIUI_modelversion Android$android_version，编译时间$time"
       } >>"$MODPATH"/module.prop
+      else
+      touch "$MODPATH"/module.prop
+      {
+         echo "id=miuiodex"
+         echo "name=MIUI ODEX"
+         echo "version=$version"
+         echo "versionCode=$versionCode"
+         echo "author=柚稚的孩纸&冷洛"
+         echo "description=分离系统软件ODEX，HyperOS$MIUI_version $HyperOS_modelversion Android$android_version，编译时间$time"
+      } >>"$MODPATH"/module.prop
+      fi
       for partition in vendor odm product system_ext; do
          if [ -d "$MODPATH"/$partition ]; then
             if [[ "$partition" == "odm" ]]; then
