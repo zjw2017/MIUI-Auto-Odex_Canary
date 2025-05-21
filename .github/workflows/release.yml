@@ -42,7 +42,7 @@ jobs:
       - name: 5. 更新下载链接
         run: |
           git config --global user.email "30484319+zjw2017@users.noreply.github.com"
-          git config --global user.name "柚稚的孩纸"
+          git config --global user.name "柚稚"
           sed -i '4d' $GITHUB_WORKSPACE/odex.json
           browser_download_url=$(curl -L   -H "Accept: application/vnd.github+json"   -H "Authorization: Bearer ${{ github.token }}"   -H "X-GitHub-Api-Version: 2022-11-28"   https://api.github.com/repos/zjw2017/MIUI-Auto-Odex_Canary/releases/tags/${{ env.version }} | jq -r .assets[].browser_download_url | cut -d'"' -f2)
           sed -i '3a "zipUrl": "https://ghproxy.com/'"$browser_download_url"'",' $GITHUB_WORKSPACE/odex.json
