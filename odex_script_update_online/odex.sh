@@ -519,7 +519,7 @@ if [[ "$choose_odex" != 3 ]]; then
       cp /data/adb/modules/odex_script_update_online_zjw2017/customize_odex.sh /storage/emulated/0/Android/MIUI_odex/module_files/customize.sh
       cp /data/adb/modules/odex_script_update_online_zjw2017/uninstall.sh /storage/emulated/0/Android/MIUI_odex/module_files
       cp -r /data/adb/modules/odex_script_update_online_zjw2017/META-INF/ "$MODPATH"/module_files
-      7zz a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip /storage/emulated/0/Android/MIUI_odex/module_files/* >/dev/null 2>&1
+      7zzs a /storage/emulated/0/Android/MIUI_odex/MIUI_odex-"$time".zip /storage/emulated/0/Android/MIUI_odex/module_files/* >/dev/null 2>&1
       echo "- 模块制作完成，路径：/storage/emulated/0/Android/MIUI_odex/MIUI_odex-$time.zip"
       rm -rf "$MODPATH" /storage/emulated/0/Android/MIUI_odex/module_files/system /storage/emulated/0/Android/MIUI_odex/module_files/module.prop
     else
